@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Script for fetching scripts from rova_lumi directory.
+# Author: Ladislav Bartos
+# Version 0.1
+
+# Absolute path to rova_lumi directory
+# Set by install.sh script.
+SRC_DIRECTORY={{ROVA_LUMI_DIRECTORY}}
+
+cp $SRC_DIRECTORY/$1 $PWD

@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# Script for running multidir Gromacs simulations on LUMI in loops.
+# Script for running Hamiltonian Replica Exchange Gromacs simulations on LUMI in loops.
 # Part of RoVa Lab LUMI environment.
 # Author: Ladislav Bartos
 # Version 0.2
@@ -9,7 +9,7 @@
 # @     SLURM OPTIONS      @
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#SBATCH --job-name=loop_md
+#SBATCH --job-name=loop_re
 #SBATCH --account=project_465000590
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
@@ -34,7 +34,7 @@
 STORAGE_DIR="storage"
 
 # pattern for simulation directory names
-SIM_DIRS="run"
+SIM_DIRS="win"
 
 # GROMACS FILES TO USE
 MDP="umbrella.mdp"
@@ -44,6 +44,9 @@ TOP="system.top"
 NDX="index.ndx"
 REF=""  # leave empty if not needed
 MAXWARN="1"
+
+# frequency of HREX exchange attempts
+HREX_FREQ=50000
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -90,6 +93,8 @@ if [ $CYCLE -eq 1 ]; then
         if [ ! -z ${CPT} ]; then FULL_CPT="-t ${SIM}/${CPT}"; fi
 
         gmx grompp -f ${SIM}/${MDP} -c ${SIM}/${GRO} ${FULL_CPT} -p ${SIM}/${TOP} -n ${SIM}/${NDX} ${FULL_REF} -o ${SIM}/${STORAGE_DIR}/md${CYCLE_FMT}.tpr -maxwarn ${MAXWARN} || exit 1
+        # prepare plumed file
+        touch ${SIM}/plumed.dat
     done
     CPI_COMMAND=""
 else
@@ -97,7 +102,7 @@ else
 fi
 
 # run the gromacs simulation
-srun -n $(( $SLURM_NTASKS * $SLURM_NNODES )) gmx_mpi mdrun -ntomp $SLURM_CPUS_PER_TASK -v -deffnm ${STORAGE_DIR}/md${CYCLE_FMT} ${CPI_COMMAND} -cpo ${STORAGE_DIR}/md${NEXT_FMT} -multidir $(ls -d ${SIM_DIRS}* | sort -h) -noappend -pin on || exit 1 
+srun -n $(( $SLURM_NTASKS * $SLURM_NNODES )) gmx_mpi mdrun -ntomp $SLURM_CPUS_PER_TASK -v -deffnm ${STORAGE_DIR}/md${CYCLE_FMT} ${CPI_COMMAND} -cpo ${STORAGE_DIR}/md${NEXT_FMT} -multidir $(ls -d ${SIM_DIRS}* | sort -h) -noappend -plumed plumed.dat -replex ${HREX_FREQ} -hrex -pin on || exit 1 
 
 for SIM in ${SIM_DIRS}*; do
     cd $SIM

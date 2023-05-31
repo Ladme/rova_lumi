@@ -1,7 +1,6 @@
 
 # RoVa LUMI
 
-
 This repository contains scripts designed for RoVa Lab to simplify working on LUMI.
 
 ⚠️ **This repository is currently in a VERY EXPERIMENTAL STAGE, and extreme caution should be exercised.**
@@ -43,9 +42,13 @@ You do not have to provide shortcut for a project. In such case, no aliases will
 
 ## Scripts
 
-- `loop_md_cpu`: Script for running multidir simulations as a single job on LUMI. It supports looping using the `loop_sub` script.
+- `loop_md_cpu`: Script for running multidir Gromacs simulations as a single job on LUMI. It supports looping using the `loop_sub` script.
+
+- `loop_re_cpu`: Script for running Hamiltonian Replica Exchange Gromacs simulation. It supports looping using the `loop_sub` script.
 
 - `loop_sub`: Script for submitting loop jobs on LUMI. If you have installed the RoVa Lab LUMI environment, the script should already be placed in your `$PATH`, so you can call it from anywhere as `loop_sub`. To submit a job for 4 cycles, run `loop_sub loop_md_cpu 4` in the directory where your simulation is present. The script will submit all cycles at once, but each subsequent cycle will only start after the previous cycle is successfully completed. In essence, this mimics the `precycle_md` script used in the Infinity environment.
+
+- `fetch`: Script for fetching other scripts from the `rova_lumi` directory. For example, `fetch loop_md_cpu` will copy `loop_md_cpu` from the `rova_lumi` directory to the current directory. If you have installed the RoVa Lab LUMI environment, the script should already be placed in your `$PATH`, so you can call it from anywhere as `fetch`. The location of the `rova_lumi` directory is also set when installing the RoVa LUMI environment, so do not move the `rova_lumi` directory after.
 
 *More scripts coming soon.*
 
@@ -57,6 +60,6 @@ These variables and aliases are generated for each project that was provided wit
 
 - `PROJECT_ID_{YOUR_SHORTCUT}`: Project number associated with the shortcut. Example: `echo $PROJECT_ID_gpu` will print `465000573`.
 
-- `main-{YOUR_SHORTCUT}`: Jump to the shared persistent storage directory for a project. `set-install-{YOUR_SHORTCUT}`: Sets EasyBuild to install software into the EasyBuild directory of the target project.
+- `main-{YOUR_SHORTCUT}`: Jump to the shared persistent storage directory for a project. You should not use this directory as it has very limited capacity.
 
 - `set-install-{YOUR_SHORTCUT}`: Sets EasyBuild to install software into the EasyBuild directory of the target project. No example as you should not do this.

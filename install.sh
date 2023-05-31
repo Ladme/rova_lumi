@@ -70,12 +70,18 @@ printf "# .bashrc file for RoVa Lab LUMI environment\n# Version $VERSION\n\n" > 
 
 create_aliases "$@"
 
-# Create bin directory & set up loop_sub
+# Create bin directory
 printf "\nSetting up bin directory and PATH.\n"
 if [ ! -d $HOME/bin ]; then mkdir $HOME/bin || exit 1; fi
 printf "\n\nexport PATH=\"${HOME}/bin:\$PATH\"" >> $HOME/.bashrc
 
+# Copy loop_sub and fetch to bin
 cp loop_sub $HOME/bin && chmod u+x $HOME/bin/loop_sub || exit 1
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cp fetch $HOME/bin && chmod u+x $HOME/bin/fetch || exit 1
+sed -i "s|{{ROVA_LUMI_DIRECTORY}}|${SCRIPT_DIR}|g" $HOME/bin/fetch || exit 1
+
 
 printf "\nSuccessfully set up RoVa Lab LUMI environment.\n\n"
 
