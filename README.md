@@ -4,7 +4,7 @@
 
 This repository contains scripts designed for RoVa Lab to simplify working on LUMI.
 
-⚠️ **This repository is currently in a VERY EXPERIMENTAL STAGE, and extreme caution should be exercised.** ⚠️
+⚠️ **This repository is currently in a VERY EXPERIMENTAL STAGE, and extreme caution should be exercised.**
 
 The repository contains several run scripts and an installation script. When run, it sets up "RoVa Lab LUMI Environment" creating user directories in the specified projects and setting up aliases for easier access to these directories.
 
