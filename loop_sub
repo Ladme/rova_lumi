@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Script for submitting loop jobs on LUMI. 
+# Part of RoVa Lab LUMI environment.
+# Author: Ladislav Bartos
+# Version 0.1
+
+# sanity check; it is forbidden to submit new cycle if previous cycles have not been completed
+if ls sub_job* 1> /dev/null 2>&1; then
+    echo "Error. 'sub_job' files detected in the directory. To continue, remove the following files: "
+    ls sub_job*
+    exit 1
+fi
+
+RUN_SCRIPT=$1
+CYCLES=$2
+
+# submit the first job
+ID=$(sbatch ${RUN_SCRIPT} | tr -dc '0-9')
+if [ -z $ID ]; then exit 1; fi
+
+echo "Submitted job ${ID}"
+# 'sub_job' file must be removed as the RUN_SCRIPT is completed; RUN_SCRIPT must be tasked to handle this
+echo "Job ${ID} has been submitted from this directory and is yet to be successfully completed." >> sub_job_${ID}
+
+# submit the remaining jobs, dependent on the previous ones
+for I in $(seq 1 $(( $CYCLES - 1 )) ); do
+    ID=$(sbatch -d afterok:${ID} ${RUN_SCRIPT} | tr -dc '0-9')
+    if [ -z $ID ]; then exit 1; fi
+
+    echo "Submitted dependent job ${ID}"
+    # 'sub_job' file must be removed as the RUN_SCRIPT is completed; RUN_SCRIPT must be tasked to handle this
+    echo "Job ${ID} has been submitted from this directory and is yet to be successfully completed." >> sub_job_${ID}
+done
