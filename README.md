@@ -56,7 +56,7 @@ You do not have to provide shortcut for a project. In such case, no aliases will
 
 These variables and aliases are generated for each project that was provided with a shortcut.
 
-- `project-{YOUR_SHORTCUT}`: Jump to your directory in the scratch directory associated with the project. Example: `project-gpu` will take me to `scratch/project_465000573/$USER`.
+- `project-{YOUR_SHORTCUT}`: Jump to your directory in the scratch directory associated with the project. Example: `project-gpu` will take me to `/scratch/project_465000573/$USER`.
 
 - `PROJECT_ID_{YOUR_SHORTCUT}`: Project number associated with the shortcut. Example: `echo $PROJECT_ID_gpu` will print `465000573`.
 
