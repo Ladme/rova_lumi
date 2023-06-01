@@ -31,7 +31,7 @@ function create_aliases {
             if [[ -n "$SHORTCUT" ]]; then
                 SHORTCUTS+=("$SHORTCUT")
                 ARGS+=("$ARG")
-                ALIAS_LINES+=("PROJECT_ID_$SHORTCUT=$ARG")
+                ALIAS_LINES+=("export ID_$SHORTCUT=$ARG")
                 ALIAS_LINES+=("alias set-install-$SHORTCUT='export EBU_USER_PREFIX=/project/project_$ARG/EasyBuild'")
                 ALIAS_LINES+=("alias project-$SHORTCUT='cd /scratch/project_$ARG/\$USER'")
                 ALIAS_LINES+=("alias main-$SHORTCUT='cd /project/project_$ARG'")
