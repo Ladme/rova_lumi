@@ -38,9 +38,9 @@ function create_aliases {
             fi
             
             # Create user directory in the project scratch
-	    if [ ! -d /scratch/project_$ARG/$USER ]; then 
-		mkdir /scratch/project_$ARG/$USER 2>/dev/null || echo "Error. Could not create user directory for project $ARG."
-	    fi
+            if [ ! -d /scratch/project_$ARG/$USER ]; then 
+                mkdir /scratch/project_$ARG/$USER 2>/dev/null || echo "Error. Could not create user directory for project $ARG."
+            fi
         fi
         
         
