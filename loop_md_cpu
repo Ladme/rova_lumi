@@ -3,7 +3,7 @@
 # Script for running multidir Gromacs simulations on LUMI in loops.
 # Part of RoVa Lab LUMI environment.
 # Author: Ladislav Bartos
-# Version 0.2
+# Version 0.3
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
 # @     SLURM OPTIONS      @
@@ -60,9 +60,9 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export EBU_USER_PREFIX=/project/project_${PROJECT_ID}/EasyBuild
 
 module load LUMI/22.08
-module load partition/L
+module load partition/C
 
-module load GROMACS/2021.4-cpeGNU-22.08-PLUMED-2.7.4-cray-python-3.9.12.1-CPU
+module load GROMACS/2021.4-cpeGNU-22.08-PLUMED-2.8.0-cray-python-3.9.12.1-CPU
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

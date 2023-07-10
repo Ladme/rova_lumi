@@ -1,30 +1,23 @@
 #!/bin/bash -l
 
-# Script for running Hamiltonian Replica Exchange Gromacs simulations on LUMI in loops.
+# Script for running multidir Gromacs simulations on LUMI-G in loops.
 # Part of RoVa Lab LUMI environment.
 # Author: Ladislav Bartos
-# Version 0.3
+# Version 0.4
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
 # @     SLURM OPTIONS      @
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
 
-#SBATCH --job-name=loop_re
-#SBATCH --account=project_465000590
+#SBATCH --job-name=loop_md
+#SBATCH --account=project_465000573
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
-#SBATCH --cpus-per-task=32
+#SBATCH --gpus-per-node=8
+#SBATCH --ntasks-per-node=8
 #SBATCH --mem=0
-#SBATCH --partition=standard
+#SBATCH --partition=standard-g
 #SBATCH -e job-%j.err -o job-%j.out
-
-# `mem=0` means that the job requests all available memory of the node
-# `nodes` corresponds to the number of nodes to use; LUMI CPU nodes have 128 CPU cores
-# `ntasks` corresponds to the number of MPI ranks to use PER NODE
-# `cpus-per-task` corresponds to the number of OpenMP threads to use per MPI rank
-
-# It seems that on LUMI it is optimal to use 1 MPI rank per simulation.
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@
 # @     GROMACS OPTIONS    @
@@ -34,38 +27,43 @@
 STORAGE_DIR="storage"
 
 # pattern for simulation directory names
-SIM_DIRS="win"
+SIM_DIRS="run"
 
 # GROMACS FILES TO USE
-MDP="umbrella.mdp"
-GRO="system.gro"
-CPT=""  # leave empty if not needed
+MDP="awh.mdp"
+GRO="md.gro"
+CPT="md.cpt"  # leave empty if not needed
 TOP="system.top"
 NDX="index.ndx"
 REF=""  # leave empty if not needed
-MAXWARN="1"
-
-# frequency of HREX exchange attempts
-HREX_FREQ=50000
+MAXWARN="0"
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-# get current project id
-if [[ $(pwd) =~ /scratch/project_([0-9]+) ]]; then
-  PROJECT_ID="${BASH_REMATCH[1]}"
-else
-  echo "ERROR. Could not identify project ID. Are you submiting the simulation from project SCRATCH storage?"
-  exit 1
-fi
+module use /appl/local/csc/modulefiles
+module load gromacs/2023-dev-rocm
 
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-export EBU_USER_PREFIX=/project/project_${PROJECT_ID}/EasyBuild
+export OMP_PLACES=cores
+export OMP_PROC_BIND=close
 
-module load LUMI/22.08
-module load partition/C
+export OMP_NUM_THREADS=7
 
-module load GROMACS/2021.4-cpeGNU-22.08-PLUMED-2.8.0-cray-python-3.9.12.1-CPU
+export GMX_ENABLE_DIRECT_GPU_COMM=1
+export GMX_FORCE_GPU_AWARE_MPI=1
+export MPICH_GPU_SUPPORT_ENABLED=1
+
+cat << EOF > select_gpu
+#!/bin/bash
+
+export ROCR_VISIBLE_DEVICES=\$SLURM_LOCALID
+exec \$*
+EOF
+
+chmod +x ./select_gpu
+
+# CPU-GPU binding for 7 CPU cores per simulation
+CPU_BIND="mask_cpu:fe000000000000,fe00000000000000,fe0000,fe000000,fe,fe00,fe00000000,fe0000000000"
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -92,9 +90,7 @@ if [ $CYCLE -eq 1 ]; then
         if [ ! -z ${REF} ]; then FULL_REF="-r ${SIM}/${REF}"; fi
         if [ ! -z ${CPT} ]; then FULL_CPT="-t ${SIM}/${CPT}"; fi
 
-        gmx grompp -f ${SIM}/${MDP} -c ${SIM}/${GRO} ${FULL_CPT} -p ${SIM}/${TOP} -n ${SIM}/${NDX} ${FULL_REF} -o ${SIM}/${STORAGE_DIR}/md${CYCLE_FMT}.tpr -maxwarn ${MAXWARN} || exit 1
-        # prepare plumed file
-        touch ${SIM}/plumed.dat
+        gmx_mpi grompp -f ${SIM}/${MDP} -c ${SIM}/${GRO} ${FULL_CPT} -p ${SIM}/${TOP} -n ${SIM}/${NDX} ${FULL_REF} -o ${SIM}/${STORAGE_DIR}/md${CYCLE_FMT}.tpr -maxwarn ${MAXWARN} || exit 1
     done
     CPI_COMMAND=""
 else
@@ -102,7 +98,7 @@ else
 fi
 
 # run the gromacs simulation
-srun -n $(( $SLURM_NTASKS * $SLURM_NNODES )) gmx_mpi mdrun -ntomp $SLURM_CPUS_PER_TASK -v -deffnm ${STORAGE_DIR}/md${CYCLE_FMT} ${CPI_COMMAND} -cpo ${STORAGE_DIR}/md${NEXT_FMT} -multidir $(ls -d ${SIM_DIRS}* | sort -h) -noappend -plumed plumed.dat -replex ${HREX_FREQ} -hrex -pin on || exit 1 
+srun -n $(( $SLURM_NTASKS * $SLURM_NNODES )) --cpu-bind=${CPU_BIND} ./select_gpu gmx_mpi mdrun -nb gpu -bonded gpu -pme gpu -ntomp ${OMP_NUM_THREADS} -deffnm ${STORAGE_DIR}/md${CYCLE_FMT} ${CPI_COMMAND} -cpo ${STORAGE_DIR}/md${NEXT_FMT} -multidir $(ls -d ${SIM_DIRS}* | sort -h) -noappend || exit 1
 
 for SIM in ${SIM_DIRS}*; do
     cd $SIM
@@ -110,7 +106,7 @@ for SIM in ${SIM_DIRS}*; do
     # extend the simulation
     EXTEND=`awk 'BEGIN {dt = 0.001; nsteps = 0} /nsteps/ {nsteps = $3} /dt/ {dt = $3} END {ext = nsteps * dt; if (!ext) {exit 2} else {print ext}}' ${MDP}`
     if [ $? -ne 0 ]; then exit 1; fi
-    gmx convert-tpr -s ${STORAGE_DIR}/md${CYCLE_FMT}.tpr -extend ${EXTEND} -o ${STORAGE_DIR}/md${NEXT_FMT}.tpr -quiet || exit 1
+    gmx_mpi convert-tpr -s ${STORAGE_DIR}/md${CYCLE_FMT}.tpr -extend ${EXTEND} -o ${STORAGE_DIR}/md${NEXT_FMT}.tpr -quiet || exit 1
     
     # rename the output files
     for FILE_SUFFIX in .gro .edr .log _pullf.xvg _pullx.xvg .xtc; do
