@@ -30,13 +30,13 @@ STORAGE_DIR="storage"
 SIM_DIRS="run"
 
 # GROMACS FILES TO USE
-MDP="awh.mdp"
-GRO="md.gro"
-CPT="md.cpt"  # leave empty if not needed
+MDP="md.mdp"
+GRO="system.gro"
+CPT=""  # leave empty if not needed
 TOP="system.top"
 NDX="index.ndx"
 REF=""  # leave empty if not needed
-MAXWARN="0"
+MAXWARN="1"
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@
