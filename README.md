@@ -44,6 +44,8 @@ You do not have to provide shortcut for a project. In such case, no aliases will
 
 - `loop_re_cpu`: Script for running Hamiltonian Replica Exchange Gromacs simulation. It supports looping using the `loop_sub` script.
 
+- `loop_metad_cpu`: Script for running multiple-walkers metadynamics on LUMI CPUs. It support looping using the `loop_sub` script.
+
 - `loop_md_gpu`: Script for running multidir Gromacs simulations as a single job on LUMI-G (GPU-accelerated). It supports looping using the `loop_sub` script.
 
 - `loop_sub`: Script for submitting loop jobs on LUMI. If you have installed the RoVa Lab LUMI environment, the script should already be placed in your `$PATH`, so you can call it from anywhere as `loop_sub`. To submit a job for *N* cycles, run `loop_sub RUN_SCRIPT N` in the directory where your simulation is present. For example, `loop_sub loop_md_cpu 4` will submit the `loop_md_cpu` script for 4 cycles. The script will submit all cycles at once, but each subsequent cycle will only start after the previous cycle is successfully completed. In essence, this mimics the `precycle_md` script used in the Infinity environment.
