@@ -48,6 +48,8 @@ You do not have to provide shortcut for a project. In such case, no aliases will
 
 - `loop_md_gpu`: Script for running multidir Gromacs simulations as a single job on LUMI-G (GPU-accelerated). It supports looping using the `loop_sub` script.
 
+- `loop_re_gpu`: Script for running Hamiltonian Replica Exchange simulations on LUMI-G (GPU-accelerated). It supports looping using the `loop_sub` script.
+
 - `loop_sub`: Script for submitting loop jobs on LUMI. If you have installed the RoVa Lab LUMI environment, the script should already be placed in your `$PATH`, so you can call it from anywhere as `loop_sub`. To submit a job for *N* cycles, run `loop_sub RUN_SCRIPT N` in the directory where your simulation is present. For example, `loop_sub loop_md_cpu 4` will submit the `loop_md_cpu` script for 4 cycles. The script will submit all cycles at once, but each subsequent cycle will only start after the previous cycle is successfully completed. In essence, this mimics the `precycle_md` script used in the Infinity environment.
 
 - `fetch`: Script for fetching other scripts from the `rova_lumi` directory. For example, `fetch loop_md_cpu` will copy `loop_md_cpu` from the `rova_lumi` directory to the current directory. If you have installed the RoVa Lab LUMI environment, the script should already be placed in your `$PATH`, so you can call it from anywhere as `fetch`. The location of the `rova_lumi` directory is also set when installing the RoVa LUMI environment, so do not move the `rova_lumi` directory after.
